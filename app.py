@@ -55,5 +55,8 @@ def reset():
     return redirect(url_for('index'))
 
 if __name__ == "__main__":
-    app.run(port=8080, debug=True)
+    # Render asigna un puerto automáticamente, si no existe usa el 5000
+    port = int(os.environ.get("PORT", 5000))
+    # Importante: Usar host='0.0.0.0' para que Render pueda detectarlo
+    app.run(host='0.0.0.0', port=port)
     
