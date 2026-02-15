@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commando Counter</title>
+    <style>
+        body { background: #0b0f1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #161b22; padding: 35px; border-radius: 25px; width: 320px; text-align: center; border: 1px solid #30363d; }
+        .logo { max-width: 140px; margin-bottom: 25px; }
+        .btn-blue { background: #38bdf8; color: #0b0f1a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .input-dark { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #30363d; background: #0d1117; color: white; font-size: 22px; text-align: center; box-sizing: border-box; margin: 15px 0; }
+        .res-box { padding: 20px; border-radius: 15px; margin-top: 15px; }
+        .verde { background: #238636; }
+        .rojo { background: #f85149; }
+        input[type="file"] { display: none; }
+        .drop-label { border: 2px dashed #38bdf8; padding: 30px; display: block; border-radius: 15px; cursor: pointer; color: #38bdf8; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+
+        {% if paso == 1 %}
+        <p style="color: #8b949e;">PASO 1</p>
+        <h3 style="margin-top: 0;">Sube las ventas</h3>
+        <form method="POST" enctype="multipart/form-data">
+            <label class="drop-label"> + SELECCIONAR ARCHIVO <input type="file" name="file" onchange="this.form.submit()"></label>
+        </form>
+
+        {% elif paso == 2 %}
+        <p style="color: #8b949e;">PASO 2</p>
+        <h3 style="margin-top: 0;">Ventas: {{ ventas }}</h3>
+        <form method="POST">
+            <input type="hidden" name="ventas_previa" value="{{ ventas }}">
+            <p>¿Cuántos vasos contaste?</p>
+            <input type="number" name="fisico" class="input-dark" placeholder="0" required autofocus>
+            <button type="submit" class="btn-blue">CONCILIAR</button>
+        </form>
+
+        {% elif paso == 3 %}
+        <div style="text-align: left; font-size: 14px;">
+            <p>📦 Inicial: <b>{{ res.inicial }}</b></p>
+            <p>🥤 Ventas: <b style="color: #ff7b72;">- {{ res.ventas }}</b></p>
+            <p>📋 Debería haber: <b>{{ res.deberia }}</b></p>
+            <p>🔍 Físico: <b>{{ res.fisico }}</b></p>
+            <div class="res-box {{ 'verde' if res.dif == 0 else 'rojo' }}">
+                <p style="margin:0; font-size: 11px; opacity: 0.8;">DIFERENCIA</p>
+                <h2 style="margin:0; font-size: 40px;">{{ res.dif }}</h2>
+                <p style="margin:0;">{{ '¡Cuadra!' if res.dif == 0 else 'No cuadra' }}</p>
+            </div>
+        </div>
+        <a href="/reset" style="display:block; margin-top:20px; color:#58a6ff; text-decoration:none; font-size:12px;">↺ Volver a empezar</a>
+        {% endif %}
+    </div>
+</body>
+</html>
