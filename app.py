@@ -10,12 +10,15 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    inventario_inicial = 1508
+    # Eliminamos el inventario_inicial fijo para pedirlo por formulario
     
     if request.method == "POST":
-        # PASO 1: Procesar el archivo y contar ventas
-        if 'file' in request.files:
+        # PASO 1: Procesar archivo Y capturar el Inventario Inicial
+        if 'file' in request.files and 'inicial' in request.form:
             file = request.files['file']
+            # Capturamos el conteo inicial que puso el usuario
+            inv_inicial = int(request.form.get('inicial', 0))
+            
             if file.filename != '':
                 path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
                 file.save(path)
@@ -23,6 +26,7 @@ def index():
                 # Lectura de archivo
                 df = pd.read_excel(path) if file.filename.endswith(('.xlsx', '.xls')) else pd.read_csv(path, encoding="latin1")
                 df.columns = [str(c).strip().lower() for c in df.columns]
+                
                 c_prod = next((c for c in df.columns if any(p in c for p in ["prod", "item", "nombre"])), df.columns[0])
                 c_cant = next((c for c in df.columns if any(p in c for p in ["qty", "cant", "total"])), None)
 
@@ -35,17 +39,26 @@ def index():
                 mask = df[c_prod].apply(lambda x: any(s in limpiar(x) for s in sk_limpios))
                 ventas = int(df[mask][c_cant].sum())
 
-                # Pasamos al paso 2 enviando el número de ventas
-                return render_template("index.html", ventas=ventas, paso=2)
+                # Enviamos 'ventas' e 'inicial' al Paso 2
+                return render_template("index.html", ventas=ventas, inicial=inv_inicial, paso=2)
 
-        # PASO 2: Recibir conteo físico y calcular resta
+        # PASO 2: Recibir conteo físico y calcular el cuadre final
         elif 'fisico' in request.form:
             ventas = int(request.form.get('ventas_previa'))
+            inv_inicial = int(request.form.get('inicial_previa')) # Recuperamos el inicial del paso anterior
             fisico = int(request.form.get('fisico'))
-            deberia = inventario_inicial - ventas
+            
+            # Lógica de cuadre
+            deberia = inv_inicial - ventas
             dif = fisico - deberia
             
-            res = {"inicial": inventario_inicial, "ventas": ventas, "deberia": deberia, "fisico": fisico, "dif": dif}
+            res = {
+                "inicial": inv_inicial, 
+                "ventas": ventas, 
+                "deberia": deberia, 
+                "fisico": fisico, 
+                "dif": dif
+            }
             return render_template("index.html", res=res, paso=3)
 
     return render_template("index.html", paso=1)
@@ -55,8 +68,6 @@ def reset():
     return redirect(url_for('index'))
 
 if __name__ == "__main__":
-    # Render asigna un puerto automáticamente, si no existe usa el 5000
     port = int(os.environ.get("PORT", 5000))
-    # Importante: Usar host='0.0.0.0' para que Render pueda detectarlo
     app.run(host='0.0.0.0', port=port)
     
