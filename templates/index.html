@@ -6,16 +6,17 @@
     <title>Commando Counter</title>
     <style>
         body { background: #0b0f1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #161b22; padding: 35px; border-radius: 25px; width: 320px; text-align: center; border: 1px solid #30363d; }
+        .card { background: #161b22; padding: 35px; border-radius: 25px; width: 320px; text-align: center; border: 1px solid #30363d; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .logo { max-width: 140px; margin-bottom: 25px; }
-        .btn-blue { background: #38bdf8; color: #0b0f1a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        .input-dark { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #30363d; background: #0d1117; color: white; font-size: 22px; text-align: center; box-sizing: border-box; margin: 15px 0; }
+        .btn-blue { background: #38bdf8; color: #0b0f1a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; transition: 0.2s; }
+        .btn-blue:hover { background: #7dd3fc; transform: scale(1.02); }
+        .input-dark { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #30363d; background: #0d1117; color: white; font-size: 22px; text-align: center; box-sizing: border-box; margin: 10px 0 20px 0; }
         .res-box { padding: 20px; border-radius: 15px; margin-top: 15px; text-align: center; }
         .verde { background: #238636; }
         .rojo { background: #f85149; }
         input[type="file"] { display: none; }
-        .drop-label { border: 2px dashed #30363d; padding: 20px; display: block; border-radius: 15px; cursor: pointer; color: #8b949e; font-weight: bold; margin-bottom: 15px; transition: 0.3s; }
-        .drop-label:hover { border-color: #38bdf8; color: #38bdf8; }
+        .drop-label { border: 2px dashed #30363d; padding: 25px; display: block; border-radius: 15px; cursor: pointer; color: #8b949e; font-weight: bold; margin-bottom: 15px; }
+        .step-label { font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -23,65 +24,71 @@
         <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
 
         {% if paso == 1 %}
-        <p style="color: #8b949e;">PASO 1</p>
-        <h3 style="margin-top: 0;">Configuración</h3>
+        <p class="step-label">Paso 1 de 2</p>
+        <h3 style="margin: 5px 0 20px 0;">Configuración</h3>
+        
         <form method="POST" enctype="multipart/form-data">
-            <p style="font-size: 14px; margin-bottom: 5px;">1. Conteo Inicial (Sistema)</p>
-            <input type="number" name="inicial" class="input-dark" placeholder="Ej: 1500" required autofocus>
+            <p style="text-align: left; font-size: 14px; margin: 0;">1. Conteo Inicial (Sistema):</p>
+            <input type="number" name="inicial" class="input-dark" placeholder="0" required>
             
-            <p style="font-size: 14px; margin-bottom: 10px;">2. Cargar reporte de ventas</p>
-            <label class="drop-label" id="file-label"> + SELECCIONAR ARCHIVO 
-                <input type="file" name="file" id="file-input" required onchange="updateLabel()">
+            <p style="text-align: left; font-size: 14px; margin: 0 0 10px 0;">2. Reporte de Ventas:</p>
+            <label class="drop-label" id="file-label">
+                <span id="file-text">+ SELECCIONAR ARCHIVO</span>
+                <input type="file" name="file" id="file-input" required onchange="updateFileName()">
             </label>
             
-            <button type="submit" class="btn-blue">CONTINUAR</button>
+            <button type="submit" class="btn-blue">PROCESAR VENTAS</button>
         </form>
 
         {% elif paso == 2 %}
-        <p style="color: #8b949e;">PASO 2</p>
-        <h3 style="margin-top: 0;">Resumen Parcial</h3>
-        <div style="text-align: left; font-size: 15px; margin-bottom: 20px; background: #0d1117; padding: 15px; border-radius: 12px;">
-            <p style="margin: 5px 0;">📦 Inicial: <b>{{ inicial }}</b></p>
-            <p style="margin: 5px 0;">🥤 Ventas: <b style="color: #ff7b72;">- {{ ventas }}</b></p>
-        </div>
+        <p class="step-label">Paso 2 de 2</p>
+        <h3 style="margin: 5px 0 20px 0;">Conteo Físico</h3>
         
+        <div style="text-align: left; background: #0d1117; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #30363d;">
+            <p style="margin: 5px 0; font-size: 14px;">📦 Inicial: <b>{{ inicial }}</b></p>
+            <p style="margin: 5px 0; font-size: 14px;">🥤 Ventas detectadas: <b style="color: #ff7b72;">- {{ ventas }}</b></p>
+        </div>
+
         <form method="POST">
             <input type="hidden" name="ventas_previa" value="{{ ventas }}">
             <input type="hidden" name="inicial_previa" value="{{ inicial }}">
             
-            <p>¿Cuántos vasos contaste físicamente?</p>
+            <p style="font-size: 15px;">¿Cuántos vasos hay físicamente?</p>
             <input type="number" name="fisico" class="input-dark" placeholder="0" required autofocus>
-            <button type="submit" class="btn-blue">CONCILIAR</button>
+            <button type="submit" class="btn-blue">OBTENER CUADRE</button>
         </form>
 
         {% elif paso == 3 %}
-        <div style="text-align: left; font-size: 14px;">
-            <p>📦 Inicial: <b>{{ res.inicial }}</b></p>
-            <p>🥤 Ventas: <b style="color: #ff7b72;">- {{ res.ventas }}</b></p>
-            <hr style="border: 0; border-top: 1px solid #30363d;">
+        <h3 style="margin-top: 0;">Resultado Final</h3>
+        <div style="text-align: left; font-size: 15px;">
+            <p>📦 Stock Inicial: <b>{{ res.inicial }}</b></p>
+            <p>🥤 Ventas Totales: <b style="color: #ff7b72;">{{ res.ventas }}</b></p>
+            <hr style="border: 0; border-top: 1px solid #30363d; margin: 15px 0;">
             <p>📋 Debería haber: <b>{{ res.deberia }}</b></p>
-            <p>🔍 Físico: <b>{{ res.fisico }}</b></p>
+            <p>🔍 Conteo Físico: <b>{{ res.fisico }}</b></p>
             
             <div class="res-box {{ 'verde' if res.dif == 0 else 'rojo' }}">
-                <p style="margin:0; font-size: 11px; opacity: 0.8;">DIFERENCIA</p>
-                <h2 style="margin:0; font-size: 40px;">{{ res.dif }}</h2>
-                <p style="margin:0;">{{ '¡Cuadrado!' if res.dif == 0 else 'No cuadra' }}</p>
+                <p style="margin:0; font-size: 11px; opacity: 0.8; font-weight: bold;">DIFERENCIA</p>
+                <h2 style="margin:0; font-size: 45px;">{{ res.dif }}</h2>
+                <p style="margin:0; font-weight: bold;">{{ '¡TOTALMENTE CUADRADO!' if res.dif == 0 else 'HAY UN DESCUADRE' }}</p>
             </div>
         </div>
-        <a href="/reset" style="display:block; margin-top:20px; color:#58a6ff; text-decoration:none; font-size:12px;">↺ Volver a empezar</a>
+        <a href="/reset" style="display:block; margin-top:25px; color:#58a6ff; text-decoration:none; font-size:13px; font-weight:bold;">↺ NUEVO CONTEO</a>
         {% endif %}
     </div>
 
     <script>
-        function updateLabel() {
+        function updateFileName() {
             const input = document.getElementById('file-input');
             const label = document.getElementById('file-label');
+            const text = document.getElementById('file-text');
             if (input.files.length > 0) {
-                label.innerHTML = "✅ ARCHIVO LISTO";
-                label.style.borderColor = "#238636";
-                label.style.color = "#238636";
+                text.innerText = "✅ " + input.files[0].name.substring(0, 15) + "...";
+                label.style.borderColor = "#38bdf8";
+                label.style.color = "#38bdf8";
             }
         }
     </script>
 </body>
 </html>
+
