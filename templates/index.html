@@ -8,13 +8,14 @@
         body { background: #0b0f1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .card { background: #161b22; padding: 35px; border-radius: 25px; width: 320px; text-align: center; border: 1px solid #30363d; }
         .logo { max-width: 140px; margin-bottom: 25px; }
-        .btn-blue { background: #38bdf8; color: #0b0f1a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .btn-blue { background: #38bdf8; color: #0b0f1a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
         .input-dark { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #30363d; background: #0d1117; color: white; font-size: 22px; text-align: center; box-sizing: border-box; margin: 15px 0; }
-        .res-box { padding: 20px; border-radius: 15px; margin-top: 15px; }
+        .res-box { padding: 20px; border-radius: 15px; margin-top: 15px; text-align: center; }
         .verde { background: #238636; }
         .rojo { background: #f85149; }
         input[type="file"] { display: none; }
-        .drop-label { border: 2px dashed #38bdf8; padding: 30px; display: block; border-radius: 15px; cursor: pointer; color: #38bdf8; font-weight: bold; }
+        .drop-label { border: 2px dashed #30363d; padding: 20px; display: block; border-radius: 15px; cursor: pointer; color: #8b949e; font-weight: bold; margin-bottom: 15px; transition: 0.3s; }
+        .drop-label:hover { border-color: #38bdf8; color: #38bdf8; }
     </style>
 </head>
 <body>
@@ -23,17 +24,32 @@
 
         {% if paso == 1 %}
         <p style="color: #8b949e;">PASO 1</p>
-        <h3 style="margin-top: 0;">Sube las ventas</h3>
+        <h3 style="margin-top: 0;">Configuración</h3>
         <form method="POST" enctype="multipart/form-data">
-            <label class="drop-label"> + SELECCIONAR ARCHIVO <input type="file" name="file" onchange="this.form.submit()"></label>
+            <p style="font-size: 14px; margin-bottom: 5px;">1. Conteo Inicial (Sistema)</p>
+            <input type="number" name="inicial" class="input-dark" placeholder="Ej: 1500" required autofocus>
+            
+            <p style="font-size: 14px; margin-bottom: 10px;">2. Cargar reporte de ventas</p>
+            <label class="drop-label" id="file-label"> + SELECCIONAR ARCHIVO 
+                <input type="file" name="file" id="file-input" required onchange="updateLabel()">
+            </label>
+            
+            <button type="submit" class="btn-blue">CONTINUAR</button>
         </form>
 
         {% elif paso == 2 %}
         <p style="color: #8b949e;">PASO 2</p>
-        <h3 style="margin-top: 0;">Ventas: {{ ventas }}</h3>
+        <h3 style="margin-top: 0;">Resumen Parcial</h3>
+        <div style="text-align: left; font-size: 15px; margin-bottom: 20px; background: #0d1117; padding: 15px; border-radius: 12px;">
+            <p style="margin: 5px 0;">📦 Inicial: <b>{{ inicial }}</b></p>
+            <p style="margin: 5px 0;">🥤 Ventas: <b style="color: #ff7b72;">- {{ ventas }}</b></p>
+        </div>
+        
         <form method="POST">
             <input type="hidden" name="ventas_previa" value="{{ ventas }}">
-            <p>¿Cuántos vasos contaste?</p>
+            <input type="hidden" name="inicial_previa" value="{{ inicial }}">
+            
+            <p>¿Cuántos vasos contaste físicamente?</p>
             <input type="number" name="fisico" class="input-dark" placeholder="0" required autofocus>
             <button type="submit" class="btn-blue">CONCILIAR</button>
         </form>
@@ -42,16 +58,30 @@
         <div style="text-align: left; font-size: 14px;">
             <p>📦 Inicial: <b>{{ res.inicial }}</b></p>
             <p>🥤 Ventas: <b style="color: #ff7b72;">- {{ res.ventas }}</b></p>
+            <hr style="border: 0; border-top: 1px solid #30363d;">
             <p>📋 Debería haber: <b>{{ res.deberia }}</b></p>
             <p>🔍 Físico: <b>{{ res.fisico }}</b></p>
+            
             <div class="res-box {{ 'verde' if res.dif == 0 else 'rojo' }}">
                 <p style="margin:0; font-size: 11px; opacity: 0.8;">DIFERENCIA</p>
                 <h2 style="margin:0; font-size: 40px;">{{ res.dif }}</h2>
-                <p style="margin:0;">{{ '¡Cuadra!' if res.dif == 0 else 'No cuadra' }}</p>
+                <p style="margin:0;">{{ '¡Cuadrado!' if res.dif == 0 else 'No cuadra' }}</p>
             </div>
         </div>
         <a href="/reset" style="display:block; margin-top:20px; color:#58a6ff; text-decoration:none; font-size:12px;">↺ Volver a empezar</a>
         {% endif %}
     </div>
+
+    <script>
+        function updateLabel() {
+            const input = document.getElementById('file-input');
+            const label = document.getElementById('file-label');
+            if (input.files.length > 0) {
+                label.innerHTML = "✅ ARCHIVO LISTO";
+                label.style.borderColor = "#238636";
+                label.style.color = "#238636";
+            }
+        }
+    </script>
 </body>
 </html>
