@@ -10,45 +10,43 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    # Eliminamos el inventario_inicial fijo para pedirlo por formulario
-    
     if request.method == "POST":
-        # PASO 1: Procesar archivo Y capturar el Inventario Inicial
+        # PASO 1: Recibe archivo e Inventario Inicial
         if 'file' in request.files and 'inicial' in request.form:
             file = request.files['file']
-            # Capturamos el conteo inicial que puso el usuario
-            inv_inicial = int(request.form.get('inicial', 0))
+            inv_inicial = request.form.get('inicial')
             
-            if file.filename != '':
+            if file.filename != '' and inv_inicial:
+                inv_inicial = int(inv_inicial)
                 path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
                 file.save(path)
                 
-                # Lectura de archivo
+                # Lectura de archivo (Excel o CSV)
                 df = pd.read_excel(path) if file.filename.endswith(('.xlsx', '.xls')) else pd.read_csv(path, encoding="latin1")
                 df.columns = [str(c).strip().lower() for c in df.columns]
                 
+                # Identificar columnas automáticamente
                 c_prod = next((c for c in df.columns if any(p in c for p in ["prod", "item", "nombre"])), df.columns[0])
                 c_cant = next((c for c in df.columns if any(p in c for p in ["qty", "cant", "total"])), None)
 
-                # Filtro de Shakes
+                # Lista de productos a filtrar
                 shakes = ["amino juice", "banana boost", "berry mango", "berry oat", "blue lemonade", "caramel", "cha cha matcha", "chai chai", "dark acai", "double berry", "fresas y machos", "hazzelino", "manito", "la manita", "mr reeses", "original", "simple", "canelita", "mango coco", "silvestre", "quaker", "vital vainilla latte"]
                 def limpiar(t): return re.sub(r'[^a-z0-9]', '', str(t).lower())
                 sk_limpios = [limpiar(s) for s in shakes]
 
+                # Limpiar datos numéricos y filtrar
                 df[c_cant] = pd.to_numeric(df[c_cant].astype(str).str.replace('[^0-9.]', '', regex=True), errors='coerce').fillna(0)
                 mask = df[c_prod].apply(lambda x: any(s in limpiar(x) for s in sk_limpios))
                 ventas = int(df[mask][c_cant].sum())
 
-                # Enviamos 'ventas' e 'inicial' al Paso 2
                 return render_template("index.html", ventas=ventas, inicial=inv_inicial, paso=2)
 
-        # PASO 2: Recibir conteo físico y calcular el cuadre final
+        # PASO 2: Recibe conteo físico y calcula diferencia
         elif 'fisico' in request.form:
             ventas = int(request.form.get('ventas_previa'))
-            inv_inicial = int(request.form.get('inicial_previa')) # Recuperamos el inicial del paso anterior
+            inv_inicial = int(request.form.get('inicial_previa'))
             fisico = int(request.form.get('fisico'))
             
-            # Lógica de cuadre
             deberia = inv_inicial - ventas
             dif = fisico - deberia
             
